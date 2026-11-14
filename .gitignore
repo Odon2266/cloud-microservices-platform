@@ -1,6 +1,11 @@
 node_modules/
 __pycache__/
 .env
+.env.*
+!.env.example
+# Dépendances et builds
+node_modules/
+dist/
 venv/
 *.log
 .DS_Store
