@@ -3,7 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { User } from './users/user.entity.js';
+import { NodesModule } from './nodes/nodes.module.js';
+import { MetricsModule } from './metrics/metrics.module.js';
 
 @Module({
   imports: [
@@ -15,10 +16,12 @@ import { User } from './users/user.entity.js';
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
         ssl: { rejectUnauthorized: false },
-        entities: [User],
+        autoLoadEntities: true,
         synchronize: true,
       }),
     }),
+    NodesModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
