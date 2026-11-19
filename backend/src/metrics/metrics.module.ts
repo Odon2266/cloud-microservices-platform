@@ -4,9 +4,10 @@ import { Metric } from './metric.entity.js';
 import { MetricsController } from './metrics.controller.js';
 import { MetricsService } from './metrics.service.js';
 import { NodesModule } from '../nodes/nodes.module.js';
+import { AlertsModule } from '../alerts/alerts.module.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Metric]), NodesModule],
+  imports: [TypeOrmModule.forFeature([Metric]), NodesModule, AlertsModule],
   controllers: [MetricsController],
   providers: [MetricsService],
   exports: [MetricsService],

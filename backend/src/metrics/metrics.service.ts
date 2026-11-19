@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Metric } from './metric.entity.js';
 import { IngestMetricDto } from './dto/ingest-metric.dto.js';
 import { Node, NodeStatus } from '../nodes/node.entity.js';
+import { AlertsService } from '../alerts/alerts.service.js';
 
 @Injectable()
 export class MetricsService {
@@ -12,6 +13,7 @@ export class MetricsService {
     private readonly metricRepository: Repository<Metric>,
     @InjectRepository(Node)
     private readonly nodeRepository: Repository<Node>,
+    private readonly alertsService: AlertsService,
   ) {}
 
   async ingest(dto: IngestMetricDto): Promise<Metric> {
@@ -43,6 +45,9 @@ export class MetricsService {
     }
 
     await this.nodeRepository.save(node);
+
+    // 4. Évaluer et créer les alertes éventuelles
+    await this.alertsService.evaluateMetric(node, savedMetric);
 
     return savedMetric;
   }

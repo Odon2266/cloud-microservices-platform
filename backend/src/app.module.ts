@@ -5,6 +5,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { NodesModule } from './nodes/nodes.module.js';
 import { MetricsModule } from './metrics/metrics.module.js';
+import { AlertsModule } from './alerts/alerts.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MetricsModule } from './metrics/metrics.module.js';
     }),
     NodesModule,
     MetricsModule,
+    AlertsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
