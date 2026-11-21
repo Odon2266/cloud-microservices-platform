@@ -1,15 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Alert, AlertSeverity, AlertType } from './alert.entity.js';
 import { Node } from '../nodes/node.entity.js';
 import { Metric } from '../metrics/metric.entity.js';
+import { TelemetryGateway } from '../telemetry/telemetry.gateway.js';
 
 @Injectable()
 export class AlertsService {
   constructor(
     @InjectRepository(Alert)
     private readonly alertRepository: Repository<Alert>,
+    @Inject(forwardRef(() => TelemetryGateway))
+    private readonly telemetryGateway: TelemetryGateway,
   ) {}
 
   async evaluateMetric(node: Node, metric: Metric): Promise<Alert[]> {
@@ -93,7 +101,10 @@ export class AlertsService {
       resolvedAt: null,
     });
 
-    return this.alertRepository.save(alert);
+    const savedAlert = await this.alertRepository.save(alert);
+    this.telemetryGateway.emitAlertTriggered(savedAlert);
+
+    return savedAlert;
   }
 
   async findAll(nodeId?: string, onlyUnresolved?: boolean): Promise<Alert[]> {

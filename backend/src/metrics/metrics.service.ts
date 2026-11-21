@@ -5,6 +5,7 @@ import { Metric } from './metric.entity.js';
 import { IngestMetricDto } from './dto/ingest-metric.dto.js';
 import { Node, NodeStatus } from '../nodes/node.entity.js';
 import { AlertsService } from '../alerts/alerts.service.js';
+import { TelemetryGateway } from '../telemetry/telemetry.gateway.js';
 
 @Injectable()
 export class MetricsService {
@@ -14,6 +15,7 @@ export class MetricsService {
     @InjectRepository(Node)
     private readonly nodeRepository: Repository<Node>,
     private readonly alertsService: AlertsService,
+    private readonly telemetryGateway: TelemetryGateway,
   ) {}
 
   async ingest(dto: IngestMetricDto): Promise<Metric> {
@@ -44,10 +46,16 @@ export class MetricsService {
       node.status = NodeStatus.UP;
     }
 
-    await this.nodeRepository.save(node);
+    const updatedNode = await this.nodeRepository.save(node);
 
     // 4. Évaluer et créer les alertes éventuelles
-    await this.alertsService.evaluateMetric(node, savedMetric);
+    await this.alertsService.evaluateMetric(updatedNode, savedMetric);
+
+    // 5. Diffuser en temps réel via WebSocket
+    this.telemetryGateway.emitMetricCreated({
+      metric: savedMetric,
+      node: updatedNode,
+    });
 
     return savedMetric;
   }
