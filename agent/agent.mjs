@@ -2,7 +2,7 @@ import os from 'node:os';
 import { performance } from 'node:perf_hooks';
 
 // Configuration de l'agent (modifiable via variables d'environnement)
-const API_URL = process.env.API_URL || 'http://localhost:3000/metrics';
+const API_URL = process.env.API_URL || 'http://100.126.200.117:3000/metrics';
 const NODE_ID = process.env.NODE_ID || 'c263bb43-0c06-45db-9721-df0233dc1e04';
 const INTERVAL_MS = Number(process.env.INTERVAL_MS || 5000);
 
@@ -56,28 +56,27 @@ async function sendTelemetry() {
   const ramUsage = getRamUsagePercent();
 
   const startTime = performance.now();
-  let latencyMs = 0;
   let isHealthy = true;
 
   try {
-    const response = await fetch(API_URL, {
+    const initialResponse = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nodeId: NODE_ID,
         cpuUsage,
         ramUsage,
-        latencyMs: 1,
+        latencyMs: 0,
         isHealthy: true,
       }),
     });
 
-    latencyMs = Math.round(performance.now() - startTime);
-    isHealthy = response.ok;
+    const latencyMs = Math.max(1, Math.round(performance.now() - startTime));
+    isHealthy = initialResponse.ok;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[${new Date().toISOString()}] HTTP ${response.status} : ${errorText}`);
+    if (!initialResponse.ok) {
+      const errorText = await initialResponse.text();
+      console.error(`[${new Date().toISOString()}] HTTP ${initialResponse.status} : ${errorText}`);
       return;
     }
 
@@ -85,7 +84,7 @@ async function sendTelemetry() {
       `[${new Date().toISOString()}] Envoyé -> CPU: ${cpuUsage}% | RAM: ${ramUsage}% | Latence HTTP: ${latencyMs}ms | Healthy: ${isHealthy}`,
     );
   } catch (err) {
-    latencyMs = Math.round(performance.now() - startTime);
+    const latencyMs = Math.round(performance.now() - startTime);
     console.error(
       `[${new Date().toISOString()}] Échec d'envoi (latence: ${latencyMs}ms) : ${err.message}`,
     );
